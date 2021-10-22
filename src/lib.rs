@@ -1,4 +1,4 @@
-use domains::identities::{self, CreatedResponse};
+use domains::identities;
 use worker::*;
 
 mod domain_schema;
@@ -17,34 +17,11 @@ pub async fn main(req: Request, env: Env) -> Result<Response> {
 
     router
         .post_async(&urls[0], |_req, ctx| async move {
-            // TODO: get the kv name by uppercasing identities_schema.name.
-            // Since we are using move, it seems like it's not allowed right now.
-            let kv = ctx.kv("IDENTITIES")?;
+            let identities_context = identities::Context::new(ctx);
 
-            kv.put(
-                "fc82307b-2664-4a88-be26-38c1b50d0eac:1",
-                r##"{
-        "type": "CREATED",
-        "version": 1,
-        "inserted_at": "1634247836",
-        "cid": "23d42487-d374-4df1-bebb-8a95428106d6",
-        "id": "fc82307b-2664-4a88-be26-38c1b50d0eac",
-        "data": {
-            "email": "marcus@radell.net",
-            "password_hash": "#password#",
-        }
-    }"##,
-            )?
-            .execute()
-            .await?;
-
-            let result = CreatedResponse {
-                jwt: "#jwt#".into(),
-            };
-
-            let result = serde_json::to_string(&result)?;
-
-            Response::ok(result)
+            let result = identities_context.create().await?;
+            let response = serde_json::to_string(&result)?;
+            Response::ok(response)
         })
         .run(req, env)
         .await
