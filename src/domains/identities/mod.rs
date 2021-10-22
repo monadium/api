@@ -27,7 +27,7 @@ impl Context {
     }
 
     pub async fn create(&self) -> Result<CreatedResponse> {
-        let kv = self.route_context.kv(&Self::schema().name)?;
+        let kv = self.route_context.kv(&Self::schema().name.to_uppercase())?;
 
         kv.put(
             "fc82307b-2664-4a88-be26-38c1b50d0eac:1",
