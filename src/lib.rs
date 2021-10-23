@@ -15,14 +15,15 @@ pub async fn main(req: Request, env: Env) -> Result<Response> {
 
     let urls = domain_schema::endpoint_urls(identities_schema);
 
-    router
-        .post_async(&urls[0], |_req, ctx| async move {
+    for url in urls {
+        router.post_async(&url, |_req, ctx| async move {
             let identities_context = identities::Context::new(ctx);
 
             let result = identities_context.create().await?;
             let response = serde_json::to_string(&result)?;
             Response::ok(response)
-        })
-        .run(req, env)
-        .await
+        });
+    }
+
+    router.run(req, env).await
 }
